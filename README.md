@@ -7,6 +7,7 @@ Stupid JMX is a stupid simple JMX command line utilitiy. It doesn't really serve
 ###Um alright... how do I use it?###
 
 mvn clean install
+
 java -jar ./target/sjmx.jar
 
 
