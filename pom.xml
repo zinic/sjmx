@@ -17,13 +17,44 @@
 
     <dependencies>
         <dependency>
+            <groupId>net.jps.jx</groupId>
+            <artifactId>jx-xjc</artifactId>
+            <version>0.2.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
-    
+        
+    <repositories>
+        <repository>
+            <id>public.maven.research.rackspace.com</id>
+            
+            <name>Rackspace Research</name>
+            <url>http://maven.research.rackspacecloud.com/content/groups/aggregate</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>releases.maven.research.rackspace.com</id>
+ 
+            <name>Rackspace Research Releases</name>
+            <url>http://maven.research.rackspacecloud.com/content/repositories/releases</url>
+        </repository>
+        
+        <snapshotRepository>
+            <id>snapshots.maven.research.rackspace.com</id>
+
+            <name>Rackspace Research Snapshots</name>
+            <url>http://maven.research.rackspacecloud.com/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
+   
     <build>
         <finalName>sjmx</finalName>
         
@@ -68,16 +99,6 @@
                 <artifactId>maven-jaxb2-plugin</artifactId>
                 <version>0.8.1</version>
                 
-                <!--
-                <dependencies>
-                    <dependency>
-                        <groupId>net.jps.jx</groupId>
-                        <artifactId>jx-xjc</artifactId>
-                        <version>0.2.1-SNAPSHOT</version>
-                    </dependency>
-                </dependencies>
-                -->
-                
                 <executions>
                     <execution>
                         <goals>
@@ -101,18 +122,15 @@
 
                     <args>
                         <arg>-extension</arg>
-                        <!-- <arg>-Xjx</arg> -->
+                        <arg>-Xjx</arg>
                     </args>
                      
-                     <!--
                     <plugins>
                         <plugin>
                             <groupId>net.jps.jx</groupId>
                             <artifactId>jx-xjc</artifactId>
-                            <version>0.2.1-SNAPSHOT</version>
                         </plugin>
                     </plugins>
-                    -->
                 </configuration>
             </plugin>
         </plugins>

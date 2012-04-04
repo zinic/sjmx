@@ -7,9 +7,9 @@ import net.jps.sjmx.config.ConfigurationManager;
  *
  * @author zinic
  */
-public class RemoteCommandList extends AbstractCommandList {
+public class RemoteCfgCommand extends AbstractCommandList {
 
-    public RemoteCommandList(ConfigurationManager configurationManager) {
+    public RemoteCfgCommand(ConfigurationManager configurationManager) {
         super(new Add(configurationManager), new List(configurationManager), new Remove(configurationManager), new Use(configurationManager));
     }
 

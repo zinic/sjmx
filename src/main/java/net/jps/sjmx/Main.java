@@ -5,7 +5,7 @@ import javax.xml.bind.JAXBException;
 import net.jps.sjmx.cli.CommandDriver;
 import net.jps.sjmx.cli.command.Command;
 import net.jps.sjmx.cli.command.result.CommandResult;
-import net.jps.sjmx.command.RootCommand;
+import net.jps.sjmx.command.Root;
 import net.jps.sjmx.config.ConfigurationManager;
 import net.jps.sjmx.config.FileConfigurationManager;
 import net.jps.sjmx.config.model.Configuration;
@@ -17,7 +17,7 @@ public class Main {
         try {
             final JAXBContext jaxbc = JAXBContext.newInstance(Configuration.class);
             final ConfigurationManager configurationManager = new FileConfigurationManager(jaxbc.createMarshaller(), jaxbc.createUnmarshaller(), new ObjectFactory());
-            final Command rootCommand = new RootCommand(configurationManager);
+            final Command rootCommand = new Root(configurationManager);
 
             final CommandResult result = new CommandDriver(rootCommand, args).go();
             final String stringResult = result.getStringResult();

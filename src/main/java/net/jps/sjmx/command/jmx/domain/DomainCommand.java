@@ -71,7 +71,7 @@ public class DomainCommand extends AbstractJmxCommand {
         final StringBuilder stringBuilder = new StringBuilder();
 
         for (String domain : mBeanServerConnection.getDomains()) {
-            stringBuilder.append("Domain: ").append(domain).append("\n");
+            stringBuilder.append(domain).append("\n");
         }
 
         return new MessageResult(stringBuilder.toString());
