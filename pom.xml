@@ -11,6 +11,8 @@
     <name>sjmx</name>
     <url>http://jpserver.net/java/sjmx</url>
 
+    <description>Stupid JMX - It's stupid simple!</description>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
