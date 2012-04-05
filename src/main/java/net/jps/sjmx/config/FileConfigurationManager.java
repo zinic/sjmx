@@ -37,8 +37,8 @@ public class FileConfigurationManager implements ConfigurationManager {
     }
 
     @Override
-    public synchronized Configuration get() throws ConfigurationException {
-        return readConfigurationFile();
+    public synchronized ConfigurationHandler readConfiguration() throws ConfigurationException {
+        return new ConfigurationHandler(this, readConfigurationFile());
     }
 
     private Configuration readConfigurationFile() throws ConfigurationException {

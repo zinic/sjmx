@@ -13,146 +13,193 @@
     <!-- Enumeration and SimpleType definitions -->
 
     <!-- Configuration ComplexType definitions -->
-    <xs:element name="sjmx" type="sjmx:Configuration" />
+   <xs:element name="sjmx" type="sjmx:Configuration" />
 
-    <xs:complexType name="Reference">
-        <xs:annotation>
+   <xs:complexType name="Reference">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
+      </xs:annotation>
+        
+      <xs:sequence>
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+        
+      <xs:attribute name="ref-id" type="xs:string" use="required">
+         <xs:annotation>
             <xs:documentation>
-                <html:p>
-                </html:p>
+               <html:p>
+               </html:p>
             </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+        
+      <xs:anyAttribute namespace="##other" processContents="lax"/> 
+   </xs:complexType>
+
+   <xs:complexType name="MiddlewareReference">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
+      </xs:annotation>
+        
+      <xs:sequence>
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+        
+      <xs:attribute name="href" type="xs:anyURI" use="required">
+         <xs:annotation>
+            <xs:documentation>
+               <html:p>
+               </html:p>
+            </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+        
+      <xs:attribute name="class-name" type="xs:string" use="required">
+         <xs:annotation>
+            <xs:documentation>
+               <html:p>
+               </html:p>
+            </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+        
+      <xs:anyAttribute namespace="##other" processContents="lax"/> 
+   </xs:complexType>
+
+   <xs:complexType name="Configuration">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
          
-            <xs:appinfo>
-                <jx:wrap />
-            </xs:appinfo>
-        </xs:annotation>
+         <xs:appinfo>
+            <jx:wrap />
+         </xs:appinfo>
+      </xs:annotation>
         
-        <xs:sequence>
-            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
-        </xs:sequence>
-        
-        <xs:attribute name="ref-id" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        
-        <xs:anyAttribute namespace="##other" processContents="lax"/> 
-    </xs:complexType>
-
-    <xs:complexType name="Configuration">
-        <xs:annotation>
-            <xs:documentation>
-                <html:p>
-                </html:p>
-            </xs:documentation>
-         
-            <xs:appinfo>
-                <jx:wrap />
-            </xs:appinfo>
-        </xs:annotation>
-        
-        <xs:sequence>
-            <xs:element name="current-connector" type="sjmx:Reference" minOccurs="0" maxOccurs="1" />
-            <xs:element name="sjmx-connectors" type="sjmx:SJMXConnectorList" minOccurs="0" maxOccurs="1" />
-            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
-        </xs:sequence>
+      <xs:sequence>
+         <xs:element name="current-connector" type="sjmx:Reference" minOccurs="0" maxOccurs="1" />
+         <xs:element name="sjmx-connectors" type="sjmx:SJMXConnectorList" minOccurs="0" maxOccurs="1" />
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
       
-        <xs:anyAttribute namespace="##other" processContents="lax"/>
-    </xs:complexType>
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+   </xs:complexType>
 
-    <xs:complexType name="SJMXConnectorList">
-        <xs:annotation>
-            <xs:documentation>
-                <html:p>
-                </html:p>
-            </xs:documentation>
-        </xs:annotation>
+   <xs:complexType name="SJMXConnectorList">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
+      </xs:annotation>
 
-        <xs:sequence>
-            <xs:element name="connector" type="sjmx:SJMXConnector" minOccurs="0" maxOccurs="unbounded" />
-            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
-        </xs:sequence>
+      <xs:sequence>
+         <xs:element name="connector" type="sjmx:SJMXConnector" minOccurs="0" maxOccurs="unbounded" />
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
       
-        <xs:anyAttribute namespace="##other" processContents="lax"/>
-    </xs:complexType>
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+   </xs:complexType>
 
-    <xs:complexType name="SJMXConnector">
-        <xs:annotation>
-            <xs:documentation>
-                <html:p>
-                </html:p>
-            </xs:documentation>
-        </xs:annotation>
+   <xs:complexType name="SJMXConnector">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
+      </xs:annotation>
         
-        <xs:sequence>
-            <xs:element name="credentials" type="sjmx:JMXCredentials" minOccurs="0" maxOccurs="1" />
-            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
-        </xs:sequence>
+      <xs:sequence>
+         <xs:element name="credentials" type="sjmx:JMXCredentials" minOccurs="0" maxOccurs="1" />
+         <xs:element name="pipeline" type="sjmx:MiddlewarePipeline" minOccurs="0" maxOccurs="1" />
+            
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
     
-        <xs:attribute name="id" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-    
-        <xs:attribute name="host" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-
-        <xs:attribute name="port" type="xs:positiveInteger" use="required">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-         
-        <xs:anyAttribute namespace="##other" processContents="lax"/>
-    </xs:complexType>
-
-    <xs:complexType name="JMXCredentials">
-        <xs:annotation>
+      <xs:attribute name="id" type="xs:string" use="required">
+         <xs:annotation>
             <xs:documentation>
-                <html:p>
-                </html:p>
+               <html:p>
+               </html:p>
             </xs:documentation>
-        </xs:annotation>
+         </xs:annotation>
+      </xs:attribute>
+    
+      <xs:attribute name="host" type="xs:string" use="required">
+         <xs:annotation>
+            <xs:documentation>
+               <html:p>
+               </html:p>
+            </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
 
-        <xs:sequence>
-            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
-        </xs:sequence>
-      
-        <xs:attribute name="username" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
+      <xs:attribute name="port" type="xs:positiveInteger" use="required">
+         <xs:annotation>
+            <xs:documentation>
+               <html:p>
+               </html:p>
+            </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+         
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+   </xs:complexType>
 
-        <xs:attribute name="password" type="xs:string" use="required">
-            <xs:annotation>
-                <xs:documentation>
-                    <html:p>
-                    </html:p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
+   <xs:complexType name="JMXCredentials">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:sequence>
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
       
-        <xs:anyAttribute namespace="##other" processContents="lax"/>
-    </xs:complexType>
+      <xs:attribute name="username" type="xs:string" use="required">
+         <xs:annotation>
+            <xs:documentation>
+               <html:p>
+               </html:p>
+            </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+
+      <xs:attribute name="password" type="xs:string" use="required">
+         <xs:annotation>
+            <xs:documentation>
+               <html:p>
+               </html:p>
+            </xs:documentation>
+         </xs:annotation>
+      </xs:attribute>
+      
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+   </xs:complexType>
+    
+   <xs:complexType name="MiddlewarePipeline">
+      <xs:annotation>
+         <xs:documentation>
+            <html:p>
+            </html:p>
+         </xs:documentation>
+      </xs:annotation>
+
+      <xs:sequence>
+         <xs:element name="filter" type="sjmx:MiddlewareReference" minOccurs="0" maxOccurs="unbounded" />
+         <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded" />
+      </xs:sequence>
+
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+   </xs:complexType>
 </xs:schema>

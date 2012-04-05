@@ -1,4 +1,4 @@
-package net.jps.sjmx.jmx.model;
+package jmx.model.info;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -7,17 +7,17 @@ import java.util.List;
  *
  * @author zinic
  */
-public class MBeanModel {
+public class ManagementBeanInfo {
 
-    private List<MBeanAttributeInfoModel> attributes;
+    private List<AttributeInfo> attributes;
     private String name, type, className, description;
 
-    public MBeanModel() {
+    public ManagementBeanInfo() {
     }
 
-    public List<MBeanAttributeInfoModel> getAttributes() {
+    public List<AttributeInfo> getAttributes() {
         if (attributes == null) {
-            attributes = new LinkedList<MBeanAttributeInfoModel>();
+            attributes = new LinkedList<AttributeInfo>();
         }
 
         return attributes;

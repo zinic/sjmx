@@ -6,7 +6,7 @@ import net.jps.sjmx.cli.CommandDriver;
 import net.jps.sjmx.cli.command.Command;
 import net.jps.sjmx.cli.command.result.CommandResult;
 import net.jps.sjmx.command.Root;
-import net.jps.sjmx.config.ConfigurationManager;
+import net.jps.sjmx.config.ConfigurationReader;
 import net.jps.sjmx.config.FileConfigurationManager;
 import net.jps.sjmx.config.model.Configuration;
 import net.jps.sjmx.config.model.ObjectFactory;
@@ -16,7 +16,7 @@ public class Main {
     public static void main(String[] args) {
         try {
             final JAXBContext jaxbc = JAXBContext.newInstance(Configuration.class);
-            final ConfigurationManager configurationManager = new FileConfigurationManager(jaxbc.createMarshaller(), jaxbc.createUnmarshaller(), new ObjectFactory());
+            final ConfigurationReader configurationManager = new FileConfigurationManager(jaxbc.createMarshaller(), jaxbc.createUnmarshaller(), new ObjectFactory());
             final Command rootCommand = new Root(configurationManager);
 
             final CommandResult result = new CommandDriver(rootCommand, args).go();

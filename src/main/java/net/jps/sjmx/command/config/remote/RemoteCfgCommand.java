@@ -1,7 +1,7 @@
-package net.jps.sjmx.command.remote;
+package net.jps.sjmx.command.config.remote;
 
 import net.jps.sjmx.cli.command.AbstractCommandList;
-import net.jps.sjmx.config.ConfigurationManager;
+import net.jps.sjmx.config.ConfigurationReader;
 
 /**
  *
@@ -9,7 +9,7 @@ import net.jps.sjmx.config.ConfigurationManager;
  */
 public class RemoteCfgCommand extends AbstractCommandList {
 
-    public RemoteCfgCommand(ConfigurationManager configurationManager) {
+    public RemoteCfgCommand(ConfigurationReader configurationManager) {
         super(new Add(configurationManager), new List(configurationManager), new Remove(configurationManager), new Use(configurationManager));
     }
 

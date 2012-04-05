@@ -1,15 +1,15 @@
-package net.jps.sjmx.jmx.model;
+package jmx.model.info;
 
 /**
  *
  * @author zinic
  */
-public class MBeanAttributeInfoModel {
+public class AttributeInfo {
 
     private String name, description, type;
     private boolean readable, writable;
 
-    public MBeanAttributeInfoModel() {
+    public AttributeInfo() {
     }
 
     public String getDescription() {

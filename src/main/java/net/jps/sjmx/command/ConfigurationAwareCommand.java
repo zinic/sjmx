@@ -1,7 +1,7 @@
 package net.jps.sjmx.command;
 
 import net.jps.sjmx.cli.command.AbstractCommand;
-import net.jps.sjmx.config.ConfigurationManager;
+import net.jps.sjmx.config.ConfigurationReader;
 
 /**
  *
@@ -9,13 +9,13 @@ import net.jps.sjmx.config.ConfigurationManager;
  */
 public abstract class ConfigurationAwareCommand extends AbstractCommand {
 
-    private ConfigurationManager configurationManager;
+    private ConfigurationReader configurationReader;
 
-    public ConfigurationAwareCommand(ConfigurationManager configurationManager) {
-        this.configurationManager = configurationManager;
+    public ConfigurationAwareCommand(ConfigurationReader configurationReader) {
+        this.configurationReader = configurationReader;
     }
 
-    protected final ConfigurationManager getConfigurationManager() {
-        return configurationManager;
+    protected final ConfigurationReader getConfigurationReader() {
+        return configurationReader;
     }
 }

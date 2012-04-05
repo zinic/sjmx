@@ -9,9 +9,9 @@ import net.jps.jx.JsonWriter;
 import net.jps.jx.jackson.JacksonJsonWriter;
 import net.jps.jx.mapping.reflection.StaticFieldMapper;
 import net.jps.sjmx.cli.command.result.*;
-import net.jps.sjmx.config.ConfigurationManager;
-import net.jps.sjmx.jmx.model.MBeanAttributeInfoModel;
-import net.jps.sjmx.jmx.model.MBeanModel;
+import net.jps.sjmx.config.ConfigurationReader;
+import jmx.model.info.AttributeInfo;
+import jmx.model.info.ManagementBeanInfo;
 import org.codehaus.jackson.JsonFactory;
 
 /**
@@ -20,7 +20,7 @@ import org.codehaus.jackson.JsonFactory;
  */
 public class DescribeCommand extends AbstractJmxCommand {
 
-    public DescribeCommand(ConfigurationManager configurationManager) {
+    public DescribeCommand(ConfigurationReader configurationManager) {
         super(configurationManager);
     }
 
@@ -58,7 +58,7 @@ public class DescribeCommand extends AbstractJmxCommand {
 
     private CommandResult describeMBean(String mbeanName, MBeanServerConnection mBeanServerConnection) throws IOException {
         final StringBuilder stringBuilder = new StringBuilder();
-        final JsonWriter<MBeanModel> mbeanJsonWriter = new JacksonJsonWriter<MBeanModel>(new JsonFactory(), StaticFieldMapper.getInstance());
+        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), StaticFieldMapper.getInstance());
 
         try {
             final Set<ObjectName> foundObjectNames = mBeanServerConnection.queryNames(ObjectName.getInstance(mbeanName), null);
@@ -81,15 +81,15 @@ public class DescribeCommand extends AbstractJmxCommand {
         return new MessageResult(stringBuilder.toString());
     }
     
-    private MBeanModel mbeanInfoToModel(ObjectName name, MBeanInfo mBeanInfo) {
-        final MBeanModel model = new MBeanModel();
+    private ManagementBeanInfo mbeanInfoToModel(ObjectName name, MBeanInfo mBeanInfo) {
+        final ManagementBeanInfo model = new ManagementBeanInfo();
         model.setName(name.getKeyProperty("name"));
         model.setType(name.getKeyProperty("type"));
         model.setClassName(mBeanInfo.getClassName());
         model.setDescription(mBeanInfo.getDescription());
         
         for (MBeanAttributeInfo attrInfo : mBeanInfo.getAttributes()) {
-            final MBeanAttributeInfoModel attrModel = new MBeanAttributeInfoModel();
+            final AttributeInfo attrModel = new AttributeInfo();
             attrModel.setName(attrInfo.getName());
             attrModel.setDescription(attrInfo.getDescription());
             attrModel.setType(attrInfo.getType());

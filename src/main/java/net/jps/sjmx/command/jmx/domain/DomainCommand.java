@@ -5,7 +5,7 @@ import javax.management.*;
 import javax.management.remote.JMXConnector;
 import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.command.jmx.AbstractJmxCommand;
-import net.jps.sjmx.config.ConfigurationManager;
+import net.jps.sjmx.config.ConfigurationReader;
 
 /**
  *
@@ -13,7 +13,7 @@ import net.jps.sjmx.config.ConfigurationManager;
  */
 public class DomainCommand extends AbstractJmxCommand {
 
-    public DomainCommand(ConfigurationManager configurationManager) {
+    public DomainCommand(ConfigurationReader configurationManager) {
         super(configurationManager);
     }
 
