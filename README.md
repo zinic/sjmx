@@ -1,8 +1,9 @@
-#Stupid JMX#
+#Smart JMX#
 
 ###What is it?###
 
-Stupid JMX is a stupid simple JMX command line utilitiy. It doesn't really serve much of a prupose but the code behind it is cool, I promise.
+Smart JMX is a JMX command line utilitiy that aims to be a configurable JMX proxy that's
+extensible via Jython MBean filter scripts.
 
 ###Um alright... how do I use it?###
 
@@ -13,7 +14,18 @@ java -jar ./target/sjmx.jar
 
 ##The Features##
 
-Getting around to this... later.
+Track multiple remote locations and allow switching between them.
+Introspect remote JMX properties.
+Allow extension through Jython scripts.
+
+See [a python JMX filter example](https://github.com/zinic/sjmx/blob/master/PythonFilterExample.py).
+
+###TODO###
+
+Build (dynamic) MBeans that reflect a model dictated by Jython sripts through their introspection of
+the remote JMX MBean model.
+
+Host the above MBeans in an MBeanServer that can be accessed by clients.
 
 ##That Legal Thing...##
 
