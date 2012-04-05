@@ -14,9 +14,9 @@ java -jar ./target/sjmx.jar
 
 ##The Features##
 
-Track multiple remote locations and allow switching between them.
-Introspect remote JMX properties.
-Allow extension through Jython scripts.
+* Track multiple remote locations and allow switching between them.
+* Introspect remote JMX properties.
+* Allow extension through Jython scripts.
 
 See [a python JMX filter example](https://github.com/zinic/sjmx/blob/master/PythonFilterExample.py).
 
