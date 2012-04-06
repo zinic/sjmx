@@ -12,6 +12,7 @@ import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationReader;
 import jmx.model.info.AttributeInfo;
 import jmx.model.info.ManagementBeanInfo;
+import jmx.model.info.ManagementBeanInfoBuilder;
 import org.codehaus.jackson.JsonFactory;
 
 /**
@@ -68,7 +69,7 @@ public class DescribeCommand extends AbstractJmxCommand {
                 final MBeanInfo mbeanInfo = mBeanServerConnection.getMBeanInfo(first);
                 
                 final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                mbeanJsonWriter.write(mbeanInfoToModel(first, mbeanInfo), baos);
+                mbeanJsonWriter.write(new ManagementBeanInfoBuilder(first, mbeanInfo).build(), baos);
                 
                 stringBuilder.append(new String(baos.toByteArray()));
             } else {
@@ -79,26 +80,5 @@ public class DescribeCommand extends AbstractJmxCommand {
         }
 
         return new MessageResult(stringBuilder.toString());
-    }
-    
-    private ManagementBeanInfo mbeanInfoToModel(ObjectName name, MBeanInfo mBeanInfo) {
-        final ManagementBeanInfo model = new ManagementBeanInfo();
-        model.setName(name.getKeyProperty("name"));
-        model.setType(name.getKeyProperty("type"));
-        model.setClassName(mBeanInfo.getClassName());
-        model.setDescription(mBeanInfo.getDescription());
-        
-        for (MBeanAttributeInfo attrInfo : mBeanInfo.getAttributes()) {
-            final AttributeInfo attrModel = new AttributeInfo();
-            attrModel.setName(attrInfo.getName());
-            attrModel.setDescription(attrInfo.getDescription());
-            attrModel.setType(attrInfo.getType());
-            attrModel.setReadable(attrInfo.isReadable());
-            attrModel.setWritable(attrInfo.isWritable());
-            
-            model.getAttributes().add(attrModel);
-        }
-        
-        return model;
     }
 }

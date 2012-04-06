@@ -4,28 +4,24 @@ package jmx.model.info;
  *
  * @author zinic
  */
-public class AttributeInfo {
+public final class AttributeInfo extends ManagementBeanComponentInfo {
 
-    private String name, description, type;
-    private boolean readable, writable;
+    private boolean readable, writable, is;
 
     public AttributeInfo() {
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+    /**
+     * Copy constructor
+     *
+     * @param attributeInfoToCopy
+     */
+    public AttributeInfo(AttributeInfo attributeInfoToCopy) {
+        setName(attributeInfoToCopy.getName());
+        setType(attributeInfoToCopy.getType());
+        setDescription(attributeInfoToCopy.getDescription());
+        setWritable(attributeInfoToCopy.isWritable());
+        setReadable(attributeInfoToCopy.isReadable());
     }
 
     public boolean isReadable() {
@@ -36,19 +32,19 @@ public class AttributeInfo {
         this.readable = readable;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public boolean isWritable() {
         return writable;
     }
 
     public void setWritable(boolean writable) {
         this.writable = writable;
+    }
+
+    public void setIs(boolean is) {
+        this.is = is;
+    }
+
+    public boolean isIs() {
+        return is;
     }
 }

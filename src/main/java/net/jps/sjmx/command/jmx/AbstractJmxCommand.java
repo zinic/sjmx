@@ -4,11 +4,9 @@ import javax.management.remote.JMXConnector;
 import net.jps.sjmx.command.ConfigurationAwareCommand;
 import net.jps.sjmx.config.ConfigurationException;
 import net.jps.sjmx.config.ConfigurationReader;
-import net.jps.sjmx.config.model.Configuration;
-import net.jps.sjmx.config.model.Reference;
-import net.jps.sjmx.config.model.SJMXConnector;
-import net.jps.sjmx.jmx.JMXConnection;
 import net.jps.sjmx.jmx.JMXConnectionException;
+import net.jps.sjmx.jmx.JMXConnectorFactory;
+import net.jps.sjmx.jmx.JMXConnectorFactoryImpl;
 
 /**
  *
@@ -16,25 +14,15 @@ import net.jps.sjmx.jmx.JMXConnectionException;
  */
 public abstract class AbstractJmxCommand extends ConfigurationAwareCommand {
 
-    public AbstractJmxCommand(ConfigurationReader configurationManager) {
-        super(configurationManager);
+    private final JMXConnectorFactory connectorFactory;
+
+    public AbstractJmxCommand(ConfigurationReader configurationReader) {
+        super(configurationReader);
+
+        connectorFactory = new JMXConnectorFactoryImpl(configurationReader);
     }
-    
+
     protected JMXConnector connect() throws ConfigurationException, JMXConnectionException {
-        final Configuration configuration = getConfigurationReader().readConfiguration().getConfiguration();
-        
-        if (configuration.getCurrentConnector() == null) {
-            throw new ConfigurationException("Not currently using a remote connection. Please set the current connection with \"remote use\"");
-        }
-        
-        final Reference currentConnection = configuration.getCurrentConnector();
-        
-        for (SJMXConnector sjmxConnector : configuration.getSjmxConnectors().getConnector()) {
-            if (currentConnection.getRefId().equals(sjmxConnector.getId())) {
-                return new JMXConnection(sjmxConnector).connect();
-            }
-        }
-        
-        throw new ConfigurationException("Unable to locate a remote endpoint that matches the in-use remote. Your configuration may be corrupted.");
+        return connectorFactory.newConnector();
     }
 }

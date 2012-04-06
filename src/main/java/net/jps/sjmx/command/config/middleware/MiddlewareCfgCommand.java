@@ -11,7 +11,8 @@ public class MiddlewareCfgCommand extends AbstractCommandList {
 
     public MiddlewareCfgCommand(ConfigurationReader configurationManager) {
         super(new Add(configurationManager),
-                new List(configurationManager));
+                new List(configurationManager),
+                new DescribeMiddlewareCommand(configurationManager));
     }
 
     @Override

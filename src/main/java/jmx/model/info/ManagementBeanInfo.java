@@ -7,20 +7,18 @@ import java.util.List;
  *
  * @author zinic
  */
-public class ManagementBeanInfo {
+public class ManagementBeanInfo extends ManagementBeanComponentInfo {
 
     private List<AttributeInfo> attributes;
-    private String name, type, className, description;
+    private List<OperationInfo> operations;
+    private String domain, className;
 
-    public ManagementBeanInfo() {
+    public String getDomain() {
+        return domain;
     }
 
-    public List<AttributeInfo> getAttributes() {
-        if (attributes == null) {
-            attributes = new LinkedList<AttributeInfo>();
-        }
-
-        return attributes;
+    public void setDomain(String domain) {
+        this.domain = domain;
     }
 
     public String getClassName() {
@@ -31,27 +29,19 @@ public class ManagementBeanInfo {
         this.className = className;
     }
 
-    public String getDescription() {
-        return description;
+    public List<OperationInfo> getOperations() {
+        if (operations == null) {
+            operations = new LinkedList<OperationInfo>();
+        }
+
+        return operations;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public List<AttributeInfo> getAttributes() {
+        if (attributes == null) {
+            attributes = new LinkedList<AttributeInfo>();
+        }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+        return attributes;
     }
 }

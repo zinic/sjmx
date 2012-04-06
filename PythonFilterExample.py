@@ -3,20 +3,22 @@ from sjmx.filter import JMXFilterlet
 # Python <3
 class PythonFilter(JMXFilterlet):
    def perform(self, context):
-      print "Context size: " + `len(context.contextInfo())`
+      jmxInfo = context.jmxInfo();
 
-      for mbeanInfo in context.contextInfo():
-         output = ""
+      for domain in jmxInfo:
+         if domain == "java.lang":
+            self.readMbeans(jmxInfo[domain], context)
+            break
 
-         if mbeanInfo.getName() is not None:
-            output += mbeanInfo.getName()
+   def readMbeans(self, mbeans, context):
+      for mbean in mbeans:
+         if mbean.getType() == "Threading":
+            self.readMbean(mbean, context)
+            break
 
-         if mbeanInfo.getType() is not None:
-            output += "(" + mbeanInfo.getType() + ")"
-
-         print output
-
-         for attrInfo in mbeanInfo.getAttributes():
-            if attrInfo.isReadable():
-               print "\tAttr: " + attrInfo.getName()
+   def readMbean (self, mbean, context):
+      for mbeanAttr in mbean.getAttributes():
+         if mbeanAttr.getName() == "PeakThreadCount":
+            context.builder().alias(mbean, mbeanAttr.getName(), "PeakThreads")
+            break
 

@@ -2,9 +2,10 @@ package jmx.model.builder;
 
 import jmx.model.info.ManagementBeanInfo;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import jmx.model.info.AttributeInfo;
+import net.jps.sjmx.jmx.JMXConnectorFactory;
+import net.jps.sjmx.jmx.ProxyManagementBean;
 
 /**
  *
@@ -12,38 +13,67 @@ import java.util.Map;
  */
 public class ManagementBeanBuilderImpl implements ManagementBeanBuilder {
 
-   private final Map<ManagementBeanInfo, List<AttributeAlias>> aliasMap;
-   private final ManagementBeanInfo info;
+    private final Map<String, AliasedAttribute> attributeAliases;
+    private final ManagementBeanInfo info;
+    private final String domainName, name;
 
-   public ManagementBeanBuilderImpl() {
-      aliasMap = new HashMap<ManagementBeanInfo, List<AttributeAlias>>();
-      info = new ManagementBeanInfo();
-   }
+    public ManagementBeanBuilderImpl(String domainName, String name) {
+        this.domainName = domainName;
+        this.name = name;
 
-   @Override
-   public void setType(String type) {
-      info.setType(type);
-   }
+        attributeAliases = new HashMap<String, AliasedAttribute>();
+        info = new ManagementBeanInfo();
+    }
 
-   @Override
-   public void setName(String name) {
-      info.setName(name);
-   }
+    public ProxyManagementBean newProxyManagementBean(JMXConnectorFactory connectorFactory) {
+        return new ProxyManagementBean(domainName, domainName, attributeAliases, connectorFactory);
+    }
 
-   @Override
-   public void setDescription(String description) {
-      info.setDescription(description);
-   }
+    public Map<String, AliasedAttribute> getAttributeAliases() {
+        return attributeAliases;
+    }
 
-   @Override
-   public void alias(ManagementBeanInfo monitorInfo, String attributeName, String alias) {
-      List<AttributeAlias> attributeAliases = aliasMap.get(monitorInfo);
-      
-      if (attributeAliases == null) {
-         attributeAliases = new LinkedList<AttributeAlias>();
-         aliasMap.put(monitorInfo, attributeAliases);
-      }
-      
-      attributeAliases.add(new AttributeAlias(attributeName, alias));
-   }
+    public String getDomainName() {
+        return domainName;
+    }
+
+    public String getName() {
+        return name;
+    }
+    
+    @Override
+    public void setType(String type) {
+        info.setType(type);
+    }
+
+    @Override
+    public void setName(String name) {
+        info.setName(name);
+    }
+
+    @Override
+    public void setDescription(String description) {
+        info.setDescription(description);
+    }
+
+    @Override
+    public void alias(ManagementBeanInfo monitorInfo, String attributeName, String alias) {
+        final AttributeInfo attributeInfo = findAttribute(monitorInfo, attributeName);
+
+        if (attributeInfo != null) {
+            attributeAliases.put(alias, new AliasedAttribute(monitorInfo, attributeInfo));
+        } else {
+            //TODO: log this
+        }
+    }
+
+    private AttributeInfo findAttribute(ManagementBeanInfo managementBeanInfo, String st) {
+        for (AttributeInfo attributeInfo : managementBeanInfo.getAttributes()) {
+            if (st.equals(attributeInfo.getName())) {
+                return attributeInfo;
+            }
+        }
+
+        return null;
+    }
 }

@@ -17,13 +17,11 @@ java -jar ./target/sjmx.jar
 * Track multiple remote locations and allow switching between them.
 * Introspect remote JMX properties.
 * Allow extension through Jython scripts.
+* Builds Dynamic MBeans that reflect a filtered or otherwise processed model dictated by Jython plugis.
 
 See [a python JMX filter example](https://github.com/zinic/sjmx/blob/master/PythonFilterExample.py).
 
 ###TODO###
-
-Build (dynamic) MBeans that reflect a model dictated by Jython sripts through their introspection of
-the remote JMX MBean model.
 
 Host the above MBeans in an MBeanServer that can be accessed by clients.
 
