@@ -4,6 +4,6 @@ package jmx.model.info;
  *
  * @author zinic
  */
-public final class NotificationInfo extends ManagementBeanComponentInfo {
+public class NotificationInfo extends ManagementBeanComponentInfo {
    
 }

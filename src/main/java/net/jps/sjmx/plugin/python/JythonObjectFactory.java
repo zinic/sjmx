@@ -1,12 +1,15 @@
-package net.jps.sjmx.python;
+package net.jps.sjmx.plugin.python;
 
+import net.jps.sjmx.plugin.ObjectFactory;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
 
 /**
+ * ty jython.org
+ * 
  * Jython Object Factory using PySystemState
  */
-public class JythonObjectFactory<T> {
+public class JythonObjectFactory<T> implements ObjectFactory<T> {
 
    private final PythonInterpreter interpreter;
    private final Class<T> interfaceType;
@@ -20,11 +23,10 @@ public class JythonObjectFactory<T> {
     * The createObject() method is responsible for the actual creation of the
     * Jython object into Java bytecode.
     */
+    @Override
    public T createObject(String pyClassName) throws ClassNotFoundException {
       Object javaInt = null;
 
-      // Create a PythonInterpreter object and import our Jython module
-      // to obtain a reference.
 //      interpreter.exec("from " + pyClassName + " import " + pyClassName);
 
       final PyObject pyClass = interpreter.get(pyClassName);

@@ -1,4 +1,4 @@
-package net.jps.sjmx.command.jmx;
+package net.jps.sjmx.command.jmx.mbean;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,6 +12,7 @@ import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationReader;
 import jmx.model.Attribute;
 import jmx.model.ManagementBean;
+import net.jps.sjmx.command.jmx.AbstractJmxCommand;
 import org.codehaus.jackson.JsonFactory;
 
 /**

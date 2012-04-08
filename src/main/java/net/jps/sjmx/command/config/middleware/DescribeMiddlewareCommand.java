@@ -2,7 +2,6 @@ package net.jps.sjmx.command.config.middleware;
 
 import net.jps.sjmx.command.jmx.*;
 import java.io.*;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -10,11 +9,12 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
-import jmx.model.builder.AliasedAttribute;
-import jmx.model.builder.ManagementBeanBuilderImpl;
+import jmx.model.proxy.AliasedAttribute;
+import jmx.model.proxy.ProxyManagementBeanInfoBuilder;
 import jmx.model.info.AttributeInfo;
 import jmx.model.info.ManagementBeanInfo;
 import jmx.model.info.ManagementBeanInfoBuilder;
+import jmx.model.info.ManagementDomainInfo;
 import net.jps.jx.JsonWriter;
 import net.jps.jx.JxWritingException;
 import net.jps.jx.jackson.JacksonJsonWriter;
@@ -28,11 +28,12 @@ import net.jps.sjmx.config.ConfigurationReader;
 import net.jps.sjmx.config.model.MiddlewarePipeline;
 import net.jps.sjmx.config.model.MiddlewareReference;
 import net.jps.sjmx.config.model.SJMXConnector;
-import net.jps.sjmx.python.JythonObjectFactory;
+import net.jps.sjmx.jmx.JMXConnectionException;
+import net.jps.sjmx.jmx.JMXInfoGraphBuilder;
+import net.jps.sjmx.plugin.InterpreterContext;
+import net.jps.sjmx.plugin.ObjectFactory;
+import net.jps.sjmx.plugin.python.PythonInterpreterContext;
 import org.codehaus.jackson.JsonFactory;
-import org.python.core.Options;
-import org.python.core.Py;
-import org.python.util.PythonInterpreter;
 import sjmx.filter.Context;
 import sjmx.filter.FilterletContext;
 import sjmx.filter.JMXFilterlet;
@@ -58,9 +59,9 @@ public class DescribeMiddlewareCommand extends AbstractJmxCommand {
     }
 
     @Override
-    public CommandResult perform(String[] arguments) throws ConfigurationException, IOException, ClassNotFoundException, JxWritingException {
+    public CommandResult perform(String[] arguments) throws ConfigurationException, IOException, JMXConnectionException, ClassNotFoundException, JxWritingException {
         if (arguments.length != 1) {
-            return new InvalidArguments("Expecting a Jython middleware filename or classname.");
+            return new InvalidArguments("Expecting a middleware filename or classname.");
         }
 
         final ConfigurationHandler cfgHandler = getConfigurationReader().readConfiguration();
@@ -71,101 +72,62 @@ public class DescribeMiddlewareCommand extends AbstractJmxCommand {
             return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
         }
 
-        final Map<String, List<ManagementBeanInfo>> remoteMBeanGraph = describeMBeans();
+        final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(connect());
 
-        for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
-            if (arguments[0].equals(middlewareRef.getClassName()) || arguments[0].equals(middlewareRef.getHref())) {
-                return processMiddleware(middlewareRef, remoteMBeanGraph);
+        try {
+            final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
+
+            for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
+                if (arguments[0].equals(middlewareRef.getClassName()) || arguments[0].equals(middlewareRef.getHref())) {
+                    return processMiddleware(middlewareRef, remoteMBeanGraph);
+                }
             }
+        } finally {
+            graphBuilder.getjMXConnection().close();
         }
 
         return new MessageResult("Unable to locate middleware: " + arguments[0]);
     }
 
-    private CommandResult processMiddleware(MiddlewareReference middlewareRef, Map<String, List<ManagementBeanInfo>> remoteMBeanGraph) throws ConfigurationException, ClassNotFoundException, IOException, JxWritingException {
+    private CommandResult processMiddleware(MiddlewareReference middlewareRef, List<ManagementDomainInfo> remoteMBeanGraph) throws ConfigurationException, ClassNotFoundException, IOException, JxWritingException {
         final File middlewareFile = new File(middlewareRef.getHref());
 
         if (!middlewareFile.exists()) {
-            throw new ConfigurationException("Unable to locate python JMX middleware file: " + middlewareFile.getAbsolutePath());
+            throw new ConfigurationException("Unable to locate JMX middleware file: " + middlewareFile.getAbsolutePath());
         }
 
-        final ByteArrayOutputStream output = new ByteArrayOutputStream();
-        
-        // Shut up Jython
-        Options.verbose = -1;
-        
-        final PythonInterpreter pyInterpreter = new PythonInterpreter();
-        pyInterpreter.setOut(output);
-        pyInterpreter.setErr(output);
-        
-        final JythonObjectFactory<JMXFilterlet> filterletFactory = new JythonObjectFactory<JMXFilterlet>(pyInterpreter, JMXFilterlet.class);
-        loadMiddleware(pyInterpreter, middlewareFile);
+        final InterpreterContext interpreterContext = new PythonInterpreterContext();
 
-        final ManagementBeanBuilderImpl managementBeanBuilder = new ManagementBeanBuilderImpl("sjmx.management", middlewareRef.getClassName());
+        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        interpreterContext.setStdOut(output);
+        interpreterContext.setStdErr(output);
+
+        final ObjectFactory<JMXFilterlet> filterletFactory = interpreterContext.newObjectFactory(JMXFilterlet.class);
+        interpreterContext.load(middlewareFile);
+
+        final ProxyManagementBeanInfoBuilder managementBeanBuilder = new ProxyManagementBeanInfoBuilder("sjmx.management", middlewareRef.getClassName());
         final JMXFilterlet filterletInstance = filterletFactory.createObject(middlewareRef.getClassName());
         final Context ctx = new FilterletContext(managementBeanBuilder, remoteMBeanGraph);
 
-        output.reset();
+        // Call into the script
         filterletInstance.perform(ctx);
 
-        final ManagementBeanInfo managementBeanInfo = new ManagementBeanInfo();
-        managementBeanInfo.setDomain(managementBeanBuilder.getDomainName());
-        managementBeanInfo.setName(managementBeanBuilder.getName());
-        managementBeanInfo.setType("JythonMBeanPoxy");
+        return writeResult(managementBeanBuilder.proxyInfo(), output);
+    }
 
-        for (Map.Entry<String, AliasedAttribute> aliasEntry : managementBeanBuilder.getAttributeAliases().entrySet()) {
-            final AttributeInfo attributeInfo = new AttributeInfo(aliasEntry.getValue().getAttributeInfo());
-            attributeInfo.setName(aliasEntry.getKey());
-
-            managementBeanInfo.getAttributes().add(attributeInfo);
-        }
-
+    private MessageResult writeResult(ManagementBeanInfo managementBeanInfo, ByteArrayOutputStream output) throws IOException, JxWritingException {
         final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), StaticFieldMapper.getInstance());
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         mbeanJsonWriter.write(managementBeanInfo, baos);
 
-        final StringBuilder outputString = new StringBuilder("Result: ");
-        outputString.append(new String(baos.toByteArray())).append("\n\nOutput\n").append(new String(output.toByteArray()));
-        
-        return new MessageResult(new String(baos.toByteArray()));
-    }
+        final MessageResult messageResult = new MessageResult();
 
-    private void loadMiddleware(PythonInterpreter pyInterpreter, File middlewareFile) throws FileNotFoundException, IOException {
-        // Load the middleware
-        final FileInputStream fin = new FileInputStream(middlewareFile);
-        pyInterpreter.execfile(fin);
+        messageResult.append("Result\n");
+        messageResult.append(new String(baos.toByteArray()));
+        messageResult.append("\n\nOutput\n");
+        messageResult.append(new String(output.toByteArray()));
 
-        fin.close();
-    }
-
-    private Map<String, List<ManagementBeanInfo>> describeMBeans() {
-        try {
-            final JMXConnector jmxConnector = connect();
-            final Map<String, List<ManagementBeanInfo>> remoteMBeanGraph = describeMBeans(jmxConnector.getMBeanServerConnection());
-
-            jmxConnector.close();
-
-            return remoteMBeanGraph;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex.getMessage(), ex);
-        }
-    }
-
-    private Map<String, List<ManagementBeanInfo>> describeMBeans(MBeanServerConnection mBeanServerConnection) throws Exception {
-        final Map<String, List<ManagementBeanInfo>> remoteMBeanGraph = new HashMap<String, List<ManagementBeanInfo>>();
-
-        for (String domainName : mBeanServerConnection.getDomains()) {
-            final List<ManagementBeanInfo> mBeanInfoList = new LinkedList<ManagementBeanInfo>();
-
-            for (ObjectName objectName : mBeanServerConnection.queryNames(ObjectName.getInstance(domainName + ":*"), null)) {
-                final MBeanInfo info = mBeanServerConnection.getMBeanInfo(objectName);
-
-                mBeanInfoList.add(new ManagementBeanInfoBuilder(objectName, info).build());
-            }
-
-            remoteMBeanGraph.put(domainName, mBeanInfoList);
-        }
-
-        return remoteMBeanGraph;
+        return messageResult;
     }
 }

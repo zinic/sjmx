@@ -1,9 +1,8 @@
 package sjmx.filter;
 
 import java.util.List;
-import java.util.Map;
-import jmx.model.builder.ManagementBeanBuilder;
-import jmx.model.info.ManagementBeanInfo;
+import jmx.model.proxy.ProxyManagementBeanBuilder;
+import jmx.model.info.ManagementDomainInfo;
 
 /**
  *
@@ -11,7 +10,7 @@ import jmx.model.info.ManagementBeanInfo;
  */
 public interface Context {
 
-    ManagementBeanBuilder builder();
+    ProxyManagementBeanBuilder builder();
 
-    Map<String, List<ManagementBeanInfo>> jmxInfo();
+    List<ManagementDomainInfo> jmxInfo();
 }

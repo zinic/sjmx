@@ -20,6 +20,7 @@ public final class ManagementBeanInfoBuilder {
 
    public ManagementBeanInfo build() {
       final ManagementBeanInfo model = new ManagementBeanInfo();
+      model.setDomain(objectName.getDomain());
       model.setName(objectName.getKeyProperty("name"));
       model.setType(objectName.getKeyProperty("type"));
       model.setDescription(mBeanInfo.getDescription());

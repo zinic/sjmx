@@ -3,7 +3,7 @@ package net.jps.sjmx.jmx;
 import java.util.Map;
 import javax.management.*;
 import javax.management.remote.JMXConnector;
-import jmx.model.builder.AliasedAttribute;
+import jmx.model.proxy.AliasedAttribute;
 import jmx.model.info.AttributeInfo;
 import jmx.model.info.MBeanInfoBuilder;
 import jmx.model.info.ManagementBeanInfo;

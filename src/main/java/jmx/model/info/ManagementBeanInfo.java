@@ -2,6 +2,8 @@ package jmx.model.info;
 
 import java.util.LinkedList;
 import java.util.List;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
 
 /**
  *
@@ -43,5 +45,11 @@ public class ManagementBeanInfo extends ManagementBeanComponentInfo {
         }
 
         return attributes;
+    }
+
+    public ObjectName getObjectName() throws MalformedObjectNameException {
+        final ManagementBeanParameters parameters = new ManagementBeanParameters(this);
+
+        return ObjectName.getInstance(domain, parameters.getSearchMap());
     }
 }

@@ -1,4 +1,4 @@
-package jmx.model.builder;
+package jmx.model.proxy;
 
 import jmx.model.info.AttributeInfo;
 import jmx.model.info.ManagementBeanInfo;

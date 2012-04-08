@@ -27,9 +27,8 @@ public class MBeanInfoBuilder {
 
         int index = 0;
         for (AttributeInfo attributeInfo : managementBean.getAttributes()) {
-            // TODO: Fix isIS -.-
             mBeanAttributes[index++] = new MBeanAttributeInfo(attributeInfo.getName(), attributeInfo.getType(), attributeInfo.getDescription(),
-                    attributeInfo.isReadable(), attributeInfo.isWritable(), false);
+                    attributeInfo.isReadable(), attributeInfo.isWritable(), attributeInfo.isIs());
         }
 
         return mBeanAttributes;

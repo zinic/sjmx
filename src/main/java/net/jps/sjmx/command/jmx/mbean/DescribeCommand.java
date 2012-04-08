@@ -1,7 +1,6 @@
-package net.jps.sjmx.command.jmx;
+package net.jps.sjmx.command.jmx.mbean;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Set;
 import javax.management.*;
 import javax.management.remote.JMXConnector;
@@ -10,9 +9,9 @@ import net.jps.jx.jackson.JacksonJsonWriter;
 import net.jps.jx.mapping.reflection.StaticFieldMapper;
 import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationReader;
-import jmx.model.info.AttributeInfo;
 import jmx.model.info.ManagementBeanInfo;
 import jmx.model.info.ManagementBeanInfoBuilder;
+import net.jps.sjmx.command.jmx.AbstractJmxCommand;
 import org.codehaus.jackson.JsonFactory;
 
 /**
@@ -45,40 +44,32 @@ public class DescribeCommand extends AbstractJmxCommand {
     }
 
     private CommandResult describeMBean(String mbeanName) {
-        try {
-            final JMXConnector jmxConnector = connect();
-            final CommandResult result = describeMBean(mbeanName, jmxConnector.getMBeanServerConnection());
-
-            jmxConnector.close();
-
-            return result;
-        } catch (Exception ex) {
-            return new ExceptionResult(ex);
-        }
-    }
-
-    private CommandResult describeMBean(String mbeanName, MBeanServerConnection mBeanServerConnection) throws IOException {
-        final StringBuilder stringBuilder = new StringBuilder();
+        final MessageResult messageResult = new MessageResult();
         final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), StaticFieldMapper.getInstance());
 
         try {
+            final JMXConnector jmxConnector = connect();
+            final MBeanServerConnection mBeanServerConnection = jmxConnector.getMBeanServerConnection();
             final Set<ObjectName> foundObjectNames = mBeanServerConnection.queryNames(ObjectName.getInstance(mbeanName), null);
-            
+
             if (!foundObjectNames.isEmpty()) {
                 final ObjectName first = foundObjectNames.iterator().next();
                 final MBeanInfo mbeanInfo = mBeanServerConnection.getMBeanInfo(first);
-                
+
                 final ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 mbeanJsonWriter.write(new ManagementBeanInfoBuilder(first, mbeanInfo).build(), baos);
-                
-                stringBuilder.append(new String(baos.toByteArray()));
+
+                messageResult.append(new String(baos.toByteArray()));
             } else {
-                return new MessageResult("Unable to locate any MBean bound to full-name or query string: " + mbeanName);
+                messageResult.append("Unable to locate any MBean bound to full-name or query string: ");
+                messageResult.append(mbeanName);
             }
-        } catch (Exception exception) {
-            return new ExceptionResult(exception);
+            
+            jmxConnector.close();
+        } catch (Exception ex) {
+            throw new FatalException(ex);
         }
 
-        return new MessageResult(stringBuilder.toString());
+        return messageResult;
     }
 }

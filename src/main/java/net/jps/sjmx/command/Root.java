@@ -1,8 +1,8 @@
 package net.jps.sjmx.command;
 
 import net.jps.sjmx.command.config.middleware.MiddlewareCfgCommand;
-import net.jps.sjmx.command.jmx.DescribeCommand;
-import net.jps.sjmx.command.jmx.ReadCommand;
+import net.jps.sjmx.command.jmx.mbean.DescribeCommand;
+import net.jps.sjmx.command.jmx.mbean.ReadCommand;
 import net.jps.sjmx.command.jmx.domain.DomainCommand;
 import net.jps.sjmx.command.config.remote.RemoteCfgCommand;
 import net.jps.sjmx.command.jmx.JMXMiddleware;

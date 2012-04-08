@@ -1,28 +1,23 @@
 package net.jps.sjmx.command.jmx;
 
-import jmx.model.builder.ManagementBeanBuilder;
-import jmx.model.builder.ManagementBeanBuilderImpl;
+import jmx.model.proxy.ProxyManagementBeanInfoBuilder;
 import java.io.*;
-import java.util.LinkedList;
+import java.lang.management.ManagementFactory;
 import java.util.List;
-import javax.management.MBeanInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import jmx.model.info.ManagementBeanInfo;
-import jmx.model.info.ManagementBeanInfoBuilder;
-import net.jps.sjmx.cli.command.result.CommandResult;
-import net.jps.sjmx.cli.command.result.MessageResult;
-import net.jps.sjmx.cli.command.result.SuccessResult;
+import javax.management.MBeanServer;
+import jmx.model.info.ManagementDomainInfo;
+import net.jps.jx.JxWritingException;
+import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationException;
 import net.jps.sjmx.config.ConfigurationHandler;
 import net.jps.sjmx.config.ConfigurationReader;
 import net.jps.sjmx.config.model.MiddlewarePipeline;
 import net.jps.sjmx.config.model.MiddlewareReference;
 import net.jps.sjmx.config.model.SJMXConnector;
-import net.jps.sjmx.python.JythonObjectFactory;
-import org.python.util.PythonInterpreter;
-import sjmx.filter.Context;
+import net.jps.sjmx.jmx.*;
+import net.jps.sjmx.plugin.InterpreterContext;
+import net.jps.sjmx.plugin.ObjectFactory;
+import net.jps.sjmx.plugin.python.PythonInterpreterContext;
 import sjmx.filter.FilterletContext;
 import sjmx.filter.JMXFilterlet;
 
@@ -47,71 +42,66 @@ public class JMXMiddleware extends AbstractJmxCommand {
     }
 
     @Override
-    public CommandResult perform(String[] arguments) throws ConfigurationException, IOException, ClassNotFoundException {
-        final PythonInterpreter pyInterpreter = new PythonInterpreter();
-        final JythonObjectFactory<JMXFilterlet> filterletFactory = new JythonObjectFactory<JMXFilterlet>(pyInterpreter, JMXFilterlet.class);
-
-        final ConfigurationHandler cfgHandler = getConfigurationReader().readConfiguration();
-        final SJMXConnector currentConnector = cfgHandler.currentConnector();
-        final MiddlewarePipeline pipeline = currentConnector.getPipeline();
-
-        if (pipeline == null) {
-            return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
-        }
-
-        final ManagementBeanInfo[] mbeans = describeMBeans();
-
-        for (final MiddlewareReference middlewareRef : pipeline.getFilter()) {
-            final File middlewareFile = new File(middlewareRef.getHref());
-
-            if (!middlewareFile.exists()) {
-                throw new ConfigurationException("Unable to locate python JMX middleware file: " + middlewareFile.getAbsolutePath());
-            }
-
-            loadMiddleware(pyInterpreter, middlewareFile);
-
-            // Holy crap python!?!
-            final JMXFilterlet filterletInstance = filterletFactory.createObject(middlewareRef.getClassName());
-//            final Context ctx = new FilterletContext(new ManagementBeanBuilderImpl("sjmx.management", middlewareRef.getClassName()), mbeans);
-
-//            filterletInstance.perform(ctx);
-        }
-
-        return new SuccessResult();
-    }
-
-    private void loadMiddleware(PythonInterpreter pyInterpreter, File middlewareFile) throws FileNotFoundException, IOException {
-        // Load the middleware
-        final FileInputStream fin = new FileInputStream(middlewareFile);
-        pyInterpreter.execfile(fin);
-
-        fin.close();
-    }
-
-    private ManagementBeanInfo[] describeMBeans() {
+    public CommandResult perform(String[] arguments) {
         try {
-            final JMXConnector jmxConnector = connect();
-            final ManagementBeanInfo[] result = describeMBeans(jmxConnector.getMBeanServerConnection());
+            final ConfigurationHandler cfgHandler = getConfigurationReader().readConfiguration();
+            final SJMXConnector currentConnector = cfgHandler.currentConnector();
+            final MiddlewarePipeline pipeline = currentConnector.getPipeline();
 
-            jmxConnector.close();
+            if (pipeline == null) {
+                return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
+            }
 
-            return result;
-        } catch (Exception ex) {
-            throw new RuntimeException(ex.getMessage(), ex);
+            final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(connect());
+
+            try {
+                final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+                final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
+                final JMXConnectorFactory connectorFactory = new JMXConnectorFactoryImpl(getConfigurationReader());
+
+                for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
+                    final ProxyManagementBeanInfoBuilder proxyBuilder = processMiddleware(middlewareRef, remoteMBeanGraph);
+
+                    mBeanServer.registerMBean(proxyBuilder.newProxyManagementBean(connectorFactory), proxyBuilder.proxyInfo().getObjectName());
+                }
+            } finally {
+                graphBuilder.getjMXConnection().close();
+            }
+        } catch (Throwable t) {
+            throw new FatalException(t);
+        }
+
+        while (true) {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException ie) {
+                throw new FatalException(ie);
+            }
         }
     }
 
-    private ManagementBeanInfo[] describeMBeans(MBeanServerConnection mBeanServerConnection) throws Exception {
-        final List<ManagementBeanInfo> monitorInfoList = new LinkedList<ManagementBeanInfo>();
+    private ProxyManagementBeanInfoBuilder processMiddleware(MiddlewareReference middlewareRef, List<ManagementDomainInfo> remoteMBeanGraph) throws ConfigurationException, ClassNotFoundException, IOException, JxWritingException {
+        final File middlewareFile = new File(middlewareRef.getHref());
 
-        for (String domainName : mBeanServerConnection.getDomains()) {
-            for (ObjectName objectName : mBeanServerConnection.queryNames(ObjectName.getInstance(domainName + ":*"), null)) {
-                final MBeanInfo info = mBeanServerConnection.getMBeanInfo(objectName);
-
-                monitorInfoList.add(new ManagementBeanInfoBuilder(objectName, info).build());
-            }
+        if (!middlewareFile.exists()) {
+            throw new ConfigurationException("Unable to locate JMX middleware file: " + middlewareFile.getAbsolutePath());
         }
 
-        return monitorInfoList.toArray(new ManagementBeanInfo[monitorInfoList.size()]);
+        final InterpreterContext interpreterContext = new PythonInterpreterContext();
+
+        final ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        interpreterContext.setStdOut(output);
+        interpreterContext.setStdErr(output);
+
+        final ObjectFactory<JMXFilterlet> filterletFactory = interpreterContext.newObjectFactory(JMXFilterlet.class);
+        interpreterContext.load(middlewareFile);
+
+        final ProxyManagementBeanInfoBuilder managementBeanBuilder = new ProxyManagementBeanInfoBuilder("sjmx.management", middlewareRef.getClassName());
+        final JMXFilterlet filterletInstance = filterletFactory.createObject(middlewareRef.getClassName());
+
+        filterletInstance.perform(new FilterletContext(managementBeanBuilder, remoteMBeanGraph));
+
+        return managementBeanBuilder;
     }
 }

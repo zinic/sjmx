@@ -1,4 +1,4 @@
-package jmx.model.builder;
+package jmx.model.proxy;
 
 import jmx.model.info.ManagementBeanInfo;
 import java.util.HashMap;
@@ -8,16 +8,17 @@ import net.jps.sjmx.jmx.JMXConnectorFactory;
 import net.jps.sjmx.jmx.ProxyManagementBean;
 
 /**
+ * dat name so huge
  *
  * @author zinic
  */
-public class ManagementBeanBuilderImpl implements ManagementBeanBuilder {
+public class ProxyManagementBeanInfoBuilder implements ProxyManagementBeanBuilder {
 
     private final Map<String, AliasedAttribute> attributeAliases;
     private final ManagementBeanInfo info;
     private final String domainName, name;
 
-    public ManagementBeanBuilderImpl(String domainName, String name) {
+    public ProxyManagementBeanInfoBuilder(String domainName, String name) {
         this.domainName = domainName;
         this.name = name;
 
@@ -27,6 +28,22 @@ public class ManagementBeanBuilderImpl implements ManagementBeanBuilder {
 
     public ProxyManagementBean newProxyManagementBean(JMXConnectorFactory connectorFactory) {
         return new ProxyManagementBean(domainName, domainName, attributeAliases, connectorFactory);
+    }
+
+    public ManagementBeanInfo proxyInfo() {
+        final ManagementBeanInfo managementBeanInfo = new ManagementBeanInfo();
+        managementBeanInfo.setDomain(domainName);
+        managementBeanInfo.setName(name);
+        managementBeanInfo.setType("SJMXMBeanPoxy");
+
+        for (Map.Entry<String, AliasedAttribute> aliasEntry : getAttributeAliases().entrySet()) {
+            final AttributeInfo attributeInfo = new AttributeInfo(aliasEntry.getValue().getAttributeInfo());
+            attributeInfo.setName(aliasEntry.getKey());
+
+            managementBeanInfo.getAttributes().add(attributeInfo);
+        }
+
+        return managementBeanInfo;
     }
 
     public Map<String, AliasedAttribute> getAttributeAliases() {
@@ -40,7 +57,7 @@ public class ManagementBeanBuilderImpl implements ManagementBeanBuilder {
     public String getName() {
         return name;
     }
-    
+
     @Override
     public void setType(String type) {
         info.setType(type);

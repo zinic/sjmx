@@ -1,10 +1,9 @@
 package sjmx.filter;
 
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import jmx.model.builder.ManagementBeanBuilder;
-import jmx.model.info.ManagementBeanInfo;
+import jmx.model.proxy.ProxyManagementBeanBuilder;
+import jmx.model.info.ManagementDomainInfo;
 
 /**
  *
@@ -12,21 +11,21 @@ import jmx.model.info.ManagementBeanInfo;
  */
 public class FilterletContext implements Context {
 
-    private final ManagementBeanBuilder managementBeanBuilder;
-    private final Map<String, List<ManagementBeanInfo>> managementBeans;
+    private final ProxyManagementBeanBuilder managementBeanBuilder;
+    private final List<ManagementDomainInfo> managementDomains;
 
-    public FilterletContext(ManagementBeanBuilder managementBeanBuilder, Map<String, List<ManagementBeanInfo>> managementBeans) {
+    public FilterletContext(ProxyManagementBeanBuilder managementBeanBuilder, List<ManagementDomainInfo> managementDomains) {
         this.managementBeanBuilder = managementBeanBuilder;
-        this.managementBeans = new HashMap<String, List<ManagementBeanInfo>>(managementBeans);
+        this.managementDomains = new LinkedList<ManagementDomainInfo>(managementDomains);
     }
 
     @Override
-    public Map<String, List<ManagementBeanInfo>> jmxInfo() {
-        return managementBeans;
+    public List<ManagementDomainInfo> jmxInfo() {
+        return managementDomains;
     }
 
     @Override
-    public ManagementBeanBuilder builder() {
+    public ProxyManagementBeanBuilder builder() {
         return managementBeanBuilder;
     }
 }
