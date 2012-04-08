@@ -45,8 +45,9 @@ public class ConfigurationHandler {
             return sjmxConnector;
          }
       }
-
-      throw new ConfigurationException("Unable to locate a remote endpoint that matches the in-use remote. Your configuration may be corrupted.");
+      
+      // throw new ConfigurationException("Unable to locate a remote endpoint that matches the in-use remote. Your configuration may be corrupted.");
+      return null;
    }
 
    public SJMXConnector currentConnector() throws ConfigurationException {

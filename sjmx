@@ -1,0 +1,6 @@
+#!/bin/bash
+
+JAR_NAME="sjmx.jar";
+JAR_LOCATION="./target/${JAR_NAME}"
+
+java -jar "${JAR_LOCATION}" $@;

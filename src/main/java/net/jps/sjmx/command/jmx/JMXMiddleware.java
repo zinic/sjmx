@@ -45,27 +45,29 @@ public class JMXMiddleware extends AbstractJmxCommand {
     public CommandResult perform(String[] arguments) {
         try {
             final ConfigurationHandler cfgHandler = getConfigurationReader().readConfiguration();
-            final SJMXConnector currentConnector = cfgHandler.currentConnector();
-            final MiddlewarePipeline pipeline = currentConnector.getPipeline();
+            
+            for (SJMXConnector currentConnector : cfgHandler.connectorList()) {
+                final MiddlewarePipeline pipeline = currentConnector.getPipeline();
 
-            if (pipeline == null) {
-                return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
-            }
-
-            final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(connect());
-
-            try {
-                final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-                final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
-                final JMXConnectorFactory connectorFactory = new JMXConnectorFactoryImpl(getConfigurationReader());
-
-                for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
-                    final ProxyManagementBeanInfoBuilder proxyBuilder = processMiddleware(middlewareRef, remoteMBeanGraph);
-
-                    mBeanServer.registerMBean(proxyBuilder.newProxyManagementBean(connectorFactory), proxyBuilder.proxyInfo().getObjectName());
+                if (pipeline == null) {
+                    return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
                 }
-            } finally {
-                graphBuilder.getjMXConnection().close();
+
+                final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(connect());
+
+                try {
+                    final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+                    final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
+                    final JMXConnectorFactory connectorFactory = new JMXConnectorFactoryImpl(getConfigurationReader());
+
+                    for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
+                        final ProxyManagementBeanInfoBuilder proxyBuilder = processMiddleware(currentConnector.getId(), middlewareRef, remoteMBeanGraph);
+
+                        mBeanServer.registerMBean(proxyBuilder.newProxyManagementBean(connectorFactory), proxyBuilder.proxyInfo().getObjectName());
+                    }
+                } finally {
+                    graphBuilder.getjMXConnection().close();
+                }
             }
         } catch (Throwable t) {
             throw new FatalException(t);
@@ -80,7 +82,7 @@ public class JMXMiddleware extends AbstractJmxCommand {
         }
     }
 
-    private ProxyManagementBeanInfoBuilder processMiddleware(MiddlewareReference middlewareRef, List<ManagementDomainInfo> remoteMBeanGraph) throws ConfigurationException, ClassNotFoundException, IOException, JxWritingException {
+    private ProxyManagementBeanInfoBuilder processMiddleware(String domain, MiddlewareReference middlewareRef, List<ManagementDomainInfo> remoteMBeanGraph) throws ConfigurationException, ClassNotFoundException, IOException, JxWritingException {
         final File middlewareFile = new File(middlewareRef.getHref());
 
         if (!middlewareFile.exists()) {
@@ -97,7 +99,7 @@ public class JMXMiddleware extends AbstractJmxCommand {
         final ObjectFactory<JMXFilterlet> filterletFactory = interpreterContext.newObjectFactory(JMXFilterlet.class);
         interpreterContext.load(middlewareFile);
 
-        final ProxyManagementBeanInfoBuilder managementBeanBuilder = new ProxyManagementBeanInfoBuilder("sjmx.management", middlewareRef.getClassName());
+        final ProxyManagementBeanInfoBuilder managementBeanBuilder = new ProxyManagementBeanInfoBuilder("sjmx." + domain, middlewareRef.getClassName());
         final JMXFilterlet filterletInstance = filterletFactory.createObject(middlewareRef.getClassName());
 
         filterletInstance.perform(new FilterletContext(managementBeanBuilder, remoteMBeanGraph));
