@@ -18,12 +18,14 @@ java -jar ./target/sjmx.jar
 * Introspect remote JMX properties.
 * Allow extension through Jython scripts.
 * Builds Dynamic MBeans that reflect a filtered or otherwise processed model dictated by Jython plugis.
+* Hosts built Dynamic MBeans on its own MBeanServer that can be accessed by external tools (like Jolokia).
 
 See [a python JMX filter example](https://github.com/zinic/sjmx/blob/master/PythonFilterExample.py).
 
 ###TODO###
 
-Host the above MBeans in an MBeanServer that can be accessed by clients.
+* Connect proxy mbeans to all remote locations.
+
 
 ##That Legal Thing...##
 
