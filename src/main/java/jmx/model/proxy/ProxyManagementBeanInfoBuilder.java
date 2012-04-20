@@ -27,7 +27,7 @@ public class ProxyManagementBeanInfoBuilder implements ProxyManagementBeanBuilde
     }
 
     public ProxyManagementBean newProxyManagementBean(JMXConnectorFactory connectorFactory) {
-        return new ProxyManagementBean(domainName, domainName, attributeAliases, connectorFactory);
+        return new ProxyManagementBean(proxyInfo(), attributeAliases, connectorFactory);
     }
 
     public ManagementBeanInfo proxyInfo() {
@@ -36,7 +36,7 @@ public class ProxyManagementBeanInfoBuilder implements ProxyManagementBeanBuilde
         managementBeanInfo.setName(name);
         managementBeanInfo.setType("SJMXMBeanPoxy");
 
-        for (Map.Entry<String, AliasedAttribute> aliasEntry : getAttributeAliases().entrySet()) {
+        for (Map.Entry<String, AliasedAttribute> aliasEntry : attributeAliases.entrySet()) {
             final AttributeInfo attributeInfo = new AttributeInfo(aliasEntry.getValue().getAttributeInfo());
             attributeInfo.setName(aliasEntry.getKey());
 

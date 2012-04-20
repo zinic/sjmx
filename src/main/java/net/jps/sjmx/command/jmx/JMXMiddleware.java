@@ -3,11 +3,18 @@ package net.jps.sjmx.command.jmx;
 import jmx.model.proxy.ProxyManagementBeanInfoBuilder;
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import javax.management.MBeanServer;
+import javax.management.*;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorServer;
+import javax.management.remote.JMXConnectorServerFactory;
+import javax.management.remote.JMXServiceURL;
 import jmx.model.info.ManagementDomainInfo;
 import net.jps.jx.JxWritingException;
 import net.jps.sjmx.cli.command.result.*;
+import net.jps.sjmx.command.ConfigurationAwareCommand;
 import net.jps.sjmx.config.ConfigurationException;
 import net.jps.sjmx.config.ConfigurationHandler;
 import net.jps.sjmx.config.ConfigurationReader;
@@ -25,7 +32,7 @@ import sjmx.filter.JMXFilterlet;
  *
  * @author zinic
  */
-public class JMXMiddleware extends AbstractJmxCommand {
+public class JMXMiddleware extends ConfigurationAwareCommand {
 
     public JMXMiddleware(ConfigurationReader configurationManager) {
         super(configurationManager);
@@ -44,8 +51,12 @@ public class JMXMiddleware extends AbstractJmxCommand {
     @Override
     public CommandResult perform(String[] arguments) {
         try {
+            final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+            final JMXServiceURL serviceURL = new JMXServiceURL("service:jmx:rmi:///jndi/rmi://localhost:9999/server");
+            final JMXConnectorServer connectorServer = JMXConnectorServerFactory.newJMXConnectorServer(serviceURL, Collections.EMPTY_MAP, mBeanServer);
+
             final ConfigurationHandler cfgHandler = getConfigurationReader().readConfiguration();
-            
+
             for (SJMXConnector currentConnector : cfgHandler.connectorList()) {
                 final MiddlewarePipeline pipeline = currentConnector.getPipeline();
 
@@ -53,33 +64,51 @@ public class JMXMiddleware extends AbstractJmxCommand {
                     return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
                 }
 
-                final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(connect());
+                final JMXConnectorFactory connectorFactory = new JMXConnectorFactoryImpl(currentConnector);
 
                 try {
-                    final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-                    final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
-                    final JMXConnectorFactory connectorFactory = new JMXConnectorFactoryImpl(getConfigurationReader());
+                    final JMXConnector jMXConnector = connectorFactory.newConnector();
+                    final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(jMXConnector);
 
-                    for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
-                        final ProxyManagementBeanInfoBuilder proxyBuilder = processMiddleware(currentConnector.getId(), middlewareRef, remoteMBeanGraph);
-
-                        mBeanServer.registerMBean(proxyBuilder.newProxyManagementBean(connectorFactory), proxyBuilder.proxyInfo().getObjectName());
+                    for (ProxyManagementBean mbeanProxy : inspectJmxRemote(graphBuilder, connectorFactory, pipeline, currentConnector)) {
+                        mBeanServer.registerMBean(mbeanProxy, mbeanProxy.getObjectName());
                     }
-                } finally {
-                    graphBuilder.getjMXConnection().close();
+
+                    jMXConnector.close();
+                } catch (Exception ex) {
+                    System.out.println("Failed to connecto to: " + currentConnector.getId());
                 }
             }
+
+            connectorServer.start();
+
+            while (true) {
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException ie) {
+                    break;
+                }
+            }
+
+            connectorServer.stop();
         } catch (Throwable t) {
             throw new FatalException(t);
         }
 
-        while (true) {
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException ie) {
-                throw new FatalException(ie);
-            }
+        return new SuccessResult();
+    }
+
+    private List<ProxyManagementBean> inspectJmxRemote(JMXInfoGraphBuilder graphBuilder, JMXConnectorFactory connectorFactory, MiddlewarePipeline pipeline, SJMXConnector currentConnector) throws IOException, ClassNotFoundException, MBeanRegistrationException, InstanceAlreadyExistsException, NotCompliantMBeanException, ConfigurationException, JxWritingException, MalformedObjectNameException, JMXConnectionException {
+        final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
+        final List<ProxyManagementBean> proxyMbeans = new LinkedList<ProxyManagementBean>();
+
+        for (MiddlewareReference middlewareRef : pipeline.getFilter()) {
+            final ProxyManagementBeanInfoBuilder proxyBuilder = processMiddleware(currentConnector.getId(), middlewareRef, remoteMBeanGraph);
+
+            proxyMbeans.add(proxyBuilder.newProxyManagementBean(connectorFactory));
         }
+
+        return proxyMbeans;
     }
 
     private ProxyManagementBeanInfoBuilder processMiddleware(String domain, MiddlewareReference middlewareRef, List<ManagementDomainInfo> remoteMBeanGraph) throws ConfigurationException, ClassNotFoundException, IOException, JxWritingException {

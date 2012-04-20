@@ -1,8 +1,12 @@
-package jmx.model.info;
+package jmx.model.info.builder;
 
 import java.util.LinkedList;
 import java.util.List;
 import javax.management.*;
+import jmx.model.info.AttributeInfo;
+import jmx.model.info.ManagementBeanInfo;
+import jmx.model.info.OperationInfo;
+import jmx.model.info.OperationParameterInfo;
 
 /**
  *

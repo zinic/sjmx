@@ -6,11 +6,11 @@ import javax.management.*;
 import javax.management.remote.JMXConnector;
 import net.jps.jx.JsonWriter;
 import net.jps.jx.jackson.JacksonJsonWriter;
-import net.jps.jx.mapping.reflection.StaticFieldMapper;
 import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationReader;
 import jmx.model.info.ManagementBeanInfo;
-import jmx.model.info.ManagementBeanInfoBuilder;
+import jmx.model.info.builder.ManagementBeanInfoBuilder;
+import net.jps.jx.JxControls;
 import net.jps.sjmx.command.jmx.AbstractJmxCommand;
 import org.codehaus.jackson.JsonFactory;
 
@@ -20,8 +20,12 @@ import org.codehaus.jackson.JsonFactory;
  */
 public class DescribeCommand extends AbstractJmxCommand {
 
-    public DescribeCommand(ConfigurationReader configurationManager) {
+    private final JxControls jxControls;
+
+    public DescribeCommand(ConfigurationReader configurationManager, JxControls jxControls) {
         super(configurationManager);
+
+        this.jxControls = jxControls;
     }
 
     @Override
@@ -45,10 +49,10 @@ public class DescribeCommand extends AbstractJmxCommand {
 
     private CommandResult describeMBean(String mbeanName) {
         final MessageResult messageResult = new MessageResult();
-        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), StaticFieldMapper.getInstance());
+        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), jxControls);
 
         try {
-            final JMXConnector jmxConnector = connect();
+            final JMXConnector jmxConnector = currentJmxRemote().newConnector();
             final MBeanServerConnection mBeanServerConnection = jmxConnector.getMBeanServerConnection();
             final Set<ObjectName> foundObjectNames = mBeanServerConnection.queryNames(ObjectName.getInstance(mbeanName), null);
 
@@ -64,7 +68,7 @@ public class DescribeCommand extends AbstractJmxCommand {
                 messageResult.append("Unable to locate any MBean bound to full-name or query string: ");
                 messageResult.append(mbeanName);
             }
-            
+
             jmxConnector.close();
         } catch (Exception ex) {
             throw new FatalException(ex);

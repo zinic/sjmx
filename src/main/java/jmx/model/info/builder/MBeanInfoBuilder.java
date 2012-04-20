@@ -1,10 +1,12 @@
-package jmx.model.info;
+package jmx.model.info.builder;
 
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanConstructorInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanNotificationInfo;
 import javax.management.MBeanOperationInfo;
+import jmx.model.info.AttributeInfo;
+import jmx.model.info.ManagementBeanInfo;
 
 /**
  *

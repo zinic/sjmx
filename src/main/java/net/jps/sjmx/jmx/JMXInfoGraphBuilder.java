@@ -6,7 +6,7 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
-import jmx.model.info.ManagementBeanInfoBuilder;
+import jmx.model.info.builder.ManagementBeanInfoBuilder;
 import jmx.model.info.ManagementDomainInfo;
 
 /**

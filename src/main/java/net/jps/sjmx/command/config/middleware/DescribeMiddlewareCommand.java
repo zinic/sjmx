@@ -9,16 +9,20 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
+import javax.xml.datatype.DatatypeFactory;
 import jmx.model.proxy.AliasedAttribute;
 import jmx.model.proxy.ProxyManagementBeanInfoBuilder;
 import jmx.model.info.AttributeInfo;
 import jmx.model.info.ManagementBeanInfo;
-import jmx.model.info.ManagementBeanInfoBuilder;
+import jmx.model.info.builder.ManagementBeanInfoBuilder;
 import jmx.model.info.ManagementDomainInfo;
 import net.jps.jx.JsonWriter;
+import net.jps.jx.JxControls;
+import net.jps.jx.JxControlsImpl;
 import net.jps.jx.JxWritingException;
 import net.jps.jx.jackson.JacksonJsonWriter;
-import net.jps.jx.mapping.reflection.StaticFieldMapper;
+import net.jps.jx.mapping.DefaultObjectConstructor;
+import net.jps.jx.mapping.reflection.DefaultClassMapper;
 import net.jps.sjmx.cli.command.result.CommandResult;
 import net.jps.sjmx.cli.command.result.InvalidArguments;
 import net.jps.sjmx.cli.command.result.MessageResult;
@@ -44,8 +48,12 @@ import sjmx.filter.JMXFilterlet;
  */
 public class DescribeMiddlewareCommand extends AbstractJmxCommand {
 
-    public DescribeMiddlewareCommand(ConfigurationReader configurationManager) {
+    private final JxControls jxControls;
+    
+    public DescribeMiddlewareCommand(ConfigurationReader configurationManager, JxControls jxControls) {
         super(configurationManager);
+        
+        this.jxControls = jxControls;
     }
 
     @Override
@@ -72,7 +80,7 @@ public class DescribeMiddlewareCommand extends AbstractJmxCommand {
             return new MessageResult("No pipeline configured for remote: " + currentConnector.getId());
         }
 
-        final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(connect());
+        final JMXInfoGraphBuilder graphBuilder = new JMXInfoGraphBuilder(currentJmxRemote().newConnector());
 
         try {
             final List<ManagementDomainInfo> remoteMBeanGraph = graphBuilder.getInfoGraph();
@@ -117,7 +125,7 @@ public class DescribeMiddlewareCommand extends AbstractJmxCommand {
     }
 
     private MessageResult writeResult(ManagementBeanInfo managementBeanInfo, ByteArrayOutputStream output) throws IOException, JxWritingException {
-        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), StaticFieldMapper.getInstance());
+        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), jxControls);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         mbeanJsonWriter.write(managementBeanInfo, baos);
 

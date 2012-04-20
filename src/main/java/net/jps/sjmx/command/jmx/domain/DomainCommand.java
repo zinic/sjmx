@@ -40,7 +40,7 @@ public class DomainCommand extends AbstractJmxCommand {
         final StringBuilder stringBuilder = new StringBuilder();
         
         try {
-            final JMXConnector jmxConnector = connect();
+            final JMXConnector jmxConnector = currentJmxRemote().newConnector();
             
             for (ObjectName objectName : jmxConnector.getMBeanServerConnection().queryNames(ObjectName.getInstance(domain + ":*"), null)) {
                 stringBuilder.append(objectName.toString()).append("\n");
@@ -56,7 +56,7 @@ public class DomainCommand extends AbstractJmxCommand {
 
     private CommandResult listDomains() {
         try {
-            final JMXConnector jmxConnector = connect();
+            final JMXConnector jmxConnector = currentJmxRemote().newConnector();
             final CommandResult result = listDomains(jmxConnector.getMBeanServerConnection());
 
             jmxConnector.close();

@@ -1,5 +1,6 @@
 package net.jps.sjmx.command;
 
+import net.jps.jx.Controls;
 import net.jps.sjmx.command.config.middleware.MiddlewareCfgCommand;
 import net.jps.sjmx.command.jmx.mbean.DescribeCommand;
 import net.jps.sjmx.command.jmx.mbean.ReadCommand;
@@ -17,8 +18,8 @@ public class Root extends net.jps.sjmx.cli.command.RootCommand {
     public Root(ConfigurationReader configurationManager) {
         super(new RemoteCfgCommand(configurationManager),
                 new DomainCommand(configurationManager),
-                new DescribeCommand(configurationManager),
-                new ReadCommand(configurationManager),
+                new DescribeCommand(configurationManager, Controls.getJxControls()),
+                new ReadCommand(configurationManager, Controls.getJxControls()),
                 new MiddlewareCfgCommand(configurationManager),
                 new JMXMiddleware(configurationManager));
     }

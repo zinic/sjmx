@@ -7,11 +7,12 @@ import javax.management.*;
 import javax.management.remote.JMXConnector;
 import net.jps.jx.JsonWriter;
 import net.jps.jx.jackson.JacksonJsonWriter;
-import net.jps.jx.mapping.reflection.StaticFieldMapper;
+import net.jps.jx.mapping.reflection.DefaultClassMapper;
 import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationReader;
 import jmx.model.Attribute;
 import jmx.model.ManagementBean;
+import net.jps.jx.JxControls;
 import net.jps.sjmx.command.jmx.AbstractJmxCommand;
 import org.codehaus.jackson.JsonFactory;
 
@@ -21,8 +22,12 @@ import org.codehaus.jackson.JsonFactory;
  */
 public class ReadCommand extends AbstractJmxCommand {
 
-    public ReadCommand(ConfigurationReader configurationManager) {
+    private final JxControls jxControls;
+
+    public ReadCommand(ConfigurationReader configurationManager, JxControls jxControls) {
         super(configurationManager);
+
+        this.jxControls = jxControls;
     }
 
     @Override
@@ -46,7 +51,7 @@ public class ReadCommand extends AbstractJmxCommand {
 
     private CommandResult readMBean(String mbeanName) {
         try {
-            final JMXConnector jmxConnector = connect();
+            final JMXConnector jmxConnector = currentJmxRemote().newConnector();
             final CommandResult result = readMBean(mbeanName, jmxConnector.getMBeanServerConnection());
 
             jmxConnector.close();
@@ -75,7 +80,7 @@ public class ReadCommand extends AbstractJmxCommand {
 
     private CommandResult readMBeanAttributres(ObjectName name, MBeanServerConnection mBeanServerConnection) {
         final StringBuilder stringBuilder = new StringBuilder();
-        final JsonWriter<ManagementBean> mbeanJsonWriter = new JacksonJsonWriter<ManagementBean>(new JsonFactory(), StaticFieldMapper.getInstance());
+        final JsonWriter<ManagementBean> mbeanJsonWriter = new JacksonJsonWriter<ManagementBean>(new JsonFactory(), jxControls);
 
         try {
             final MBeanInfo mbeanInfo = mBeanServerConnection.getMBeanInfo(name);
