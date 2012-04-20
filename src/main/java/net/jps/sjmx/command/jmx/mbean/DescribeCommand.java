@@ -11,6 +11,7 @@ import net.jps.sjmx.config.ConfigurationReader;
 import jmx.model.info.ManagementBeanInfo;
 import jmx.model.info.builder.ManagementBeanInfoBuilder;
 import net.jps.jx.JxControls;
+import net.jps.jx.jackson.JacksonJxFactory;
 import net.jps.sjmx.command.jmx.AbstractJmxCommand;
 import org.codehaus.jackson.JsonFactory;
 
@@ -49,9 +50,9 @@ public class DescribeCommand extends AbstractJmxCommand {
 
     private CommandResult describeMBean(String mbeanName) {
         final MessageResult messageResult = new MessageResult();
-        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), jxControls);
 
         try {
+            final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJxFactory().newWriter(ManagementBeanInfo.class);
             final JMXConnector jmxConnector = currentJmxRemote().newConnector();
             final MBeanServerConnection mBeanServerConnection = jmxConnector.getMBeanServerConnection();
             final Set<ObjectName> foundObjectNames = mBeanServerConnection.queryNames(ObjectName.getInstance(mbeanName), null);

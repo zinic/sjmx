@@ -6,15 +6,13 @@ import java.util.Set;
 import javax.management.*;
 import javax.management.remote.JMXConnector;
 import net.jps.jx.JsonWriter;
-import net.jps.jx.jackson.JacksonJsonWriter;
-import net.jps.jx.mapping.reflection.DefaultClassMapper;
 import net.jps.sjmx.cli.command.result.*;
 import net.jps.sjmx.config.ConfigurationReader;
 import jmx.model.Attribute;
 import jmx.model.ManagementBean;
 import net.jps.jx.JxControls;
+import net.jps.jx.jackson.JacksonJxFactory;
 import net.jps.sjmx.command.jmx.AbstractJmxCommand;
-import org.codehaus.jackson.JsonFactory;
 
 /**
  *
@@ -80,9 +78,9 @@ public class ReadCommand extends AbstractJmxCommand {
 
     private CommandResult readMBeanAttributres(ObjectName name, MBeanServerConnection mBeanServerConnection) {
         final StringBuilder stringBuilder = new StringBuilder();
-        final JsonWriter<ManagementBean> mbeanJsonWriter = new JacksonJsonWriter<ManagementBean>(new JsonFactory(), jxControls);
 
         try {
+            final JsonWriter<ManagementBean> mbeanJsonWriter = new JacksonJxFactory().newWriter(ManagementBean.class);
             final MBeanInfo mbeanInfo = mBeanServerConnection.getMBeanInfo(name);
             final AttributeList attrList = mBeanServerConnection.getAttributes(name, getAttributeNames(mbeanInfo));
 

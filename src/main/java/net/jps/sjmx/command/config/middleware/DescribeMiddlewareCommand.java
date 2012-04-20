@@ -9,6 +9,7 @@ import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
+import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import jmx.model.proxy.AliasedAttribute;
 import jmx.model.proxy.ProxyManagementBeanInfoBuilder;
@@ -21,6 +22,7 @@ import net.jps.jx.JxControls;
 import net.jps.jx.JxControlsImpl;
 import net.jps.jx.JxWritingException;
 import net.jps.jx.jackson.JacksonJsonWriter;
+import net.jps.jx.jackson.JacksonJxFactory;
 import net.jps.jx.mapping.DefaultObjectConstructor;
 import net.jps.jx.mapping.reflection.DefaultClassMapper;
 import net.jps.sjmx.cli.command.result.CommandResult;
@@ -49,10 +51,10 @@ import sjmx.filter.JMXFilterlet;
 public class DescribeMiddlewareCommand extends AbstractJmxCommand {
 
     private final JxControls jxControls;
-    
+
     public DescribeMiddlewareCommand(ConfigurationReader configurationManager, JxControls jxControls) {
         super(configurationManager);
-        
+
         this.jxControls = jxControls;
     }
 
@@ -125,9 +127,14 @@ public class DescribeMiddlewareCommand extends AbstractJmxCommand {
     }
 
     private MessageResult writeResult(ManagementBeanInfo managementBeanInfo, ByteArrayOutputStream output) throws IOException, JxWritingException {
-        final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJsonWriter<ManagementBeanInfo>(new JsonFactory(), jxControls);
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        mbeanJsonWriter.write(managementBeanInfo, baos);
+
+        try {
+            final JsonWriter<ManagementBeanInfo> mbeanJsonWriter = new JacksonJxFactory().newWriter(ManagementBeanInfo.class);
+            mbeanJsonWriter.write(managementBeanInfo, baos);
+        } catch (DatatypeConfigurationException dce) {
+            throw new JxWritingException("Unable to build datatype factory for JSON writing");
+        }
 
         final MessageResult messageResult = new MessageResult();
 
